@@ -46,6 +46,7 @@ struct FreeBlock {
 }
 
 pub struct FreeListAllocator {
+    #[allow(dead_code)]
     heap_start: usize,
     heap_end: usize,
     /// Bump pointer: unallocated region starts here
