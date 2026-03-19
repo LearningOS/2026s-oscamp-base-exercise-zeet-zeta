@@ -85,15 +85,25 @@ impl OnceCell {
     /// Hint: use `compare_exchange` to ensure only one thread succeeds.
     pub fn init(&self, val: u32) -> bool {
         // TODO: Use compare_exchange to ensure initialization only once
-        if self
-            .value
-            .compare_exchange(0, val, Ordering::SeqCst, Ordering::SeqCst)
-            .is_ok()
+        // if self
+        //     .value
+        //     .compare_exchange(0, val, Ordering::SeqCst, Ordering::SeqCst)
+        //     .is_ok()
+        // {
+        //     self.initialized.store(true, Ordering::SeqCst);
+        //     true
+        // } else {
+        //     false
+        // }
+        match self
+            .initialized
+            .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
         {
-            self.initialized.store(true, Ordering::SeqCst);
-            true
-        } else {
-            false
+            Ok(_) => {
+                self.value.store(val, Ordering::SeqCst);
+                true
+            }
+            Err(_) => false,
         }
     }
 

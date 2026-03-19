@@ -94,8 +94,9 @@ impl<T> RwLock<T> {
         // TODO
         // 这里可以使用release提高“关门”速度
         // 尽快将wait这个消息同步给其他核心
-        self.state.fetch_or(WRITER_WAITING, Ordering::Release);
         loop {
+            // 这里必须去搞在循环内
+            self.state.fetch_or(WRITER_WAITING, Ordering::Release);
             let x = self.state.load(Ordering::Relaxed);
             if x & WRITER_HOLDING != 0 || x & READER_MASK != 0 {
                 core::hint::spin_loop();
@@ -166,9 +167,7 @@ impl<T> DerefMut for RwLockWriteGuard<'_, T> {
 // Clear writer bits so lock is free: self.lock.state.fetch_and(!(WRITER_HOLDING | WRITER_WAITING), Ordering::Release)
 impl<T> Drop for RwLockWriteGuard<'_, T> {
     fn drop(&mut self) {
-        self.lock
-            .state
-            .fetch_and(!WRITER_HOLDING, Ordering::Release);
+        self.lock.state.fetch_and(0, Ordering::Release);
     }
 }
 
